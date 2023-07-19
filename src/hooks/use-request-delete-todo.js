@@ -1,10 +1,15 @@
+import { useNavigate } from "react-router-dom";
+
 export const useRequestDeleteTodo = () => {
-  const requestDeleteTodo = (id, title, isUpdate, setIsUpdate) => {
-    let answer = window.confirm(`Удалить задачу ${title}?`);
+  const navigate = useNavigate();
+  const requestDeleteTodo = (id, description, isUpdate, setIsUpdate) => {
+    let answer = window.confirm(`Удалить задачу ${description}?`);
     if (answer) {
       fetch(`http://localhost:3005/todos/${id}`, {
         method: "DELETE",
-      }).then(() => setIsUpdate(!isUpdate));
+      })
+        .then(() => navigate("/"))
+        .then(() => setIsUpdate(!isUpdate));
     } else {
       return null;
     }

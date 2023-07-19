@@ -1,136 +1,72 @@
-import styles from "./App.module.css";
+import styles from "./styles/App.module.css";
+import { TodosList, TodoWindow, NavBar, ErrorPage } from "./components";
 import { useState } from "react";
-import {
-  useRequestGetTodo,
-  useRequestAddTodo,
-  useRequestDeleteTodo,
-  useRequestEditTodoTitle,
-  useRequestEditTodoDescription,
-} from "./hooks";
-import { TaskBlockLayout, FinderLayout } from "./layout";
+import { useRequestGetTodo } from "./hooks";
+import { Route, Routes, Navigate } from "react-router-dom";
 
-function App() {
+const App = () => {
   const [todosList, setTodosList] = useState([]);
-  const [newTodoData, setNewTodoData] = useState({
-    id: "",
-    title: "",
-    description: "",
-  });
-  const [isUpdate, setIsUpdate] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isUpdate, setIsUpdate] = useState(false);
   const [finderValue, setFinderValue] = useState("");
-  const [enableSort, setEnableSort] = useState(false);
+  const [showTodoWindow, setShowTodoWindow] = useState(false);
+  const [sortIsEnabled, setSortIsEnabled] = useState(false);
 
-  useRequestGetTodo(setIsLoading, setTodosList, isUpdate);
-
-  const createTodo = useRequestAddTodo(
-    setIsLoading,
-    newTodoData,
-    setNewTodoData,
-    setIsUpdate,
-    isUpdate
-  );
-  const requestEditTodoTitle = useRequestEditTodoTitle();
-  const requestEditTodoDescription = useRequestEditTodoDescription();
-  const requestDeleteTodo = useRequestDeleteTodo();
-
+  useRequestGetTodo(setIsLoading, setTodosList, setIsUpdate, isUpdate);
   const finder = (finderValue) => {
-    return todosList.filter(
-      (value) =>
-        value.title.toLowerCase().includes(finderValue.toLowerCase()) ||
-        value.description.toLowerCase().includes(finderValue.toLowerCase())
+    return todosList.filter((value) =>
+      value.description.toLowerCase().includes(finderValue.toLowerCase())
     );
   };
   const filteredItems = finderValue ? finder(finderValue) : todosList;
 
-  function byField(field) {
-    return (a, b) => (a[field] > b[field] ? 1 : -1);
-  }
-
-  const sorted = enableSort
-    ? filteredItems.sort(byField("title"))
-    : filteredItems;
-
-  return (
-    <div className={styles.app}>
-      {isLoading ? (
-        <div className={styles.loader}></div>
-      ) : (
-        <div className={styles.container}>
-          <div className={styles.inputBlock}>
-            <TaskBlockLayout createTodo={createTodo} />
-            <h1>TODO List</h1>
-            <FinderLayout
-              finderValue={finderValue}
-              setFinderValue={setFinderValue}
+  return isLoading ? (
+    <div className={styles.loader}></div>
+  ) : (
+    <div className={styles.container}>
+      <div className={styles.navBar}>
+        <NavBar
+          isUpdate={isUpdate}
+          setIsUpdate={setIsUpdate}
+          todosList={todosList}
+          finderValue={finderValue}
+          setFinderValue={setFinderValue}
+          filteredItems={filteredItems}
+          sortIsEnabled={sortIsEnabled}
+          setSortIsEnabled={setSortIsEnabled}
+        />
+      </div>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <TodosList
+              todosList={todosList}
+              filteredItems={filteredItems}
+              isUpdate={isUpdate}
+              setIsUpdate={setIsUpdate}
+              setShowTodoWindow={setShowTodoWindow}
+              sortIsEnabled={sortIsEnabled}
             />
-          </div>
-          <button
-            className={styles.sortButton}
-            onClick={() => {
-              setEnableSort(!enableSort);
-              setIsUpdate(!isUpdate);
-            }}
-          >
-            {!enableSort ? `Сортировать по алфавиту` : `Сортировать по порядку`}
-          </button>
-          {
-            <div className={styles.todoContainer}>
-              {filteredItems.map(({ id, title, description }) => {
-                return (
-                  <div className={styles.todoCard} key={id}>
-                    <div className={styles.title}>
-                      <button
-                        className={styles.removeButton}
-                        onClick={() => {
-                          requestDeleteTodo(id, title, isUpdate, setIsUpdate);
-                        }}
-                      >
-                        x
-                      </button>
-                      <input
-                        type="text"
-                        defaultValue={title}
-                        placeholder="Заголовок"
-                        onChange={({ target }) => {
-                          setNewTodoData({
-                            ...newTodoData,
-                            title: target.value,
-                          });
-                        }}
-                        onBlur={() =>
-                          requestEditTodoTitle(id, newTodoData.title)
-                        }
-                      />
-                    </div>
-                    <div className={styles.todoCardDescription}>
-                      <input
-                        type="text"
-                        defaultValue={description}
-                        placeholder="Описание задачи"
-                        onChange={({ target }) => {
-                          setNewTodoData({
-                            ...newTodoData,
-                            description: target.value,
-                          });
-                        }}
-                        onBlur={() =>
-                          requestEditTodoDescription(
-                            id,
-                            newTodoData.description
-                          )
-                        }
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
           }
-        </div>
-      )}
+        >
+          <Route
+            path="/task/:id"
+            element={
+              <TodoWindow
+                isUpdate={isUpdate}
+                setIsUpdate={setIsUpdate}
+                showTodoWindow={showTodoWindow}
+                setShowTodoWindow={setShowTodoWindow}
+              />
+            }
+          />
+        </Route>
+        <Route path="/404" element={<ErrorPage />} />
+        <Route path="*" element={<Navigate to="/404" />} />
+      </Routes>
     </div>
   );
-}
+};
 
 export default App;

@@ -1,30 +1,17 @@
-export const useRequestAddTodo = (
-  setIsLoading,
-  newTodoData,
-  setNewTodoData,
-  setIsUpdate,
-  isUpdate
-) => {
+export const useRequestAddTodo = () => {
   const createTodo = () => {
     requestAddTodo();
   };
   const requestAddTodo = () => {
-    setIsLoading(true);
-    setNewTodoData({ ...newTodoData, title: "", description: "" });
     fetch("http://localhost:3005/todos", {
       method: "POST",
       headers: { "Content-Type": "application/json;charset=utf-8" },
       body: JSON.stringify({
-        title: "",
+        id: "",
         description: "",
+        isNowCreate: true,
       }),
-    })
-      .then(() => {
-        setIsUpdate(!isUpdate);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+    });
   };
 
   return createTodo;
